@@ -9,3 +9,4 @@
 .cxx
 local.properties
 .mise.local.toml
+*.jar
