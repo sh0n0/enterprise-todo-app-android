@@ -19,61 +19,68 @@ import net.openid.appauth.connectivity.ConnectionBuilder
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
-    private val authService: AuthorizationService,
-    private val connectionBuilder: ConnectionBuilder
-) : ViewModel() {
+class MainViewModel
+    @Inject
+    constructor(
+        private val authService: AuthorizationService,
+        private val connectionBuilder: ConnectionBuilder,
+    ) : ViewModel() {
+        private val _authStateMessage = MutableStateFlow("Not logged in")
+        val authStateMessage: StateFlow<String> = _authStateMessage.asStateFlow()
 
-    private val _authStateMessage = MutableStateFlow("Not logged in")
-    val authStateMessage: StateFlow<String> = _authStateMessage.asStateFlow()
+        private val _authRequest = Channel<AuthorizationRequest>(Channel.BUFFERED)
+        val authRequest = _authRequest.receiveAsFlow()
 
-    private val _authRequest = Channel<AuthorizationRequest>(Channel.BUFFERED)
-    val authRequest = _authRequest.receiveAsFlow()
+        // Configuration
+        private val issuerUri = Uri.parse("http://10.0.2.2:18080/realms/enterprise-todo-app")
+        private val clientId = "enterprise-todo-app-mobile"
+        private val redirectUri = Uri.parse("com.example.todo:/oauth2redirect")
 
-    // Configuration
-    private val issuerUri = Uri.parse("http://10.0.2.2:18080/realms/enterprise-todo-app")
-    private val clientId = "enterprise-todo-app-mobile"
-    private val redirectUri = Uri.parse("com.example.todo:/oauth2redirect")
+        fun startAuth() {
+            AuthorizationServiceConfiguration.fetchFromIssuer(
+                issuerUri,
+                { config, ex ->
+                    if (ex != null) {
+                        _authStateMessage.value = "Failed to retrieve discovery document: ${ex.message}"
+                        Log.e("MainViewModel", "Discovery failed", ex)
+                        return@fetchFromIssuer
+                    }
 
-    fun startAuth() {
-        AuthorizationServiceConfiguration.fetchFromIssuer(
-            issuerUri,
-            { config, ex ->
-                if (ex != null) {
-                    _authStateMessage.value = "Failed to retrieve discovery document: ${ex.message}"
-                    Log.e("MainViewModel", "Discovery failed", ex)
-                    return@fetchFromIssuer
+                    if (config != null) {
+                        val authRequest =
+                            AuthorizationRequest
+                                .Builder(
+                                    config,
+                                    clientId,
+                                    ResponseTypeValues.CODE,
+                                    redirectUri,
+                                ).build()
+
+                        _authRequest.trySend(authRequest)
+                    }
+                },
+                connectionBuilder,
+            )
+        }
+
+        fun handleAuthResult(
+            response: AuthorizationResponse?,
+            ex: AuthorizationException?,
+        ) {
+            if (response != null) {
+                _authStateMessage.value = "Authorization code received. Exchanging for token..."
+                authService.performTokenRequest(response.createTokenExchangeRequest()) { tokenResponse, exception ->
+                    if (tokenResponse != null) {
+                        _authStateMessage.value =
+                            "Login successful!\nAccess Token: ${tokenResponse.accessToken?.take(20)}..."
+                        Log.d("MainViewModel", "AccessToken: ${tokenResponse.accessToken}")
+                        Log.d("MainViewModel", "RefreshToken: ${tokenResponse.refreshToken}")
+                    } else {
+                        _authStateMessage.value = "Token exchange failed: ${exception?.message}"
+                    }
                 }
-
-                if (config != null) {
-                    val authRequest = AuthorizationRequest.Builder(
-                        config,
-                        clientId,
-                        ResponseTypeValues.CODE,
-                        redirectUri
-                    ).build()
-
-                    _authRequest.trySend(authRequest)
-                }
-            },
-            connectionBuilder
-        )
-    }
-
-    fun handleAuthResult(response: AuthorizationResponse?, ex: AuthorizationException?) {
-        if (response != null) {
-            _authStateMessage.value = "Authorization code received. Exchanging for token..."
-            authService.performTokenRequest(response.createTokenExchangeRequest()) { tokenResponse, exception ->
-                if (tokenResponse != null) {
-                    _authStateMessage.value = "Login successful!\nAccess Token: ${tokenResponse.accessToken?.take(20)}..."
-                    Log.d("MainViewModel", "AccessToken: ${tokenResponse.accessToken}")
-                    Log.d("MainViewModel", "RefreshToken: ${tokenResponse.refreshToken}")
-                } else {
-                    _authStateMessage.value = "Token exchange failed: ${exception?.message}"
-                }
+            } else {
+                _authStateMessage.value = "Authorization failed: ${ex?.message}"
             }
-        } else {
-            _authStateMessage.value = "Authorization failed: ${ex?.message}"
         }
     }
-}

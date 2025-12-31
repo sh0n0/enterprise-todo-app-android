@@ -1,6 +1,5 @@
 package com.example.todo
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,20 +29,20 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val viewModel: MainViewModel by viewModels()
 
     @Inject
     lateinit var authService: AuthorizationService
 
-    private val authLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data ?: return@registerForActivityResult
-            val response = AuthorizationResponse.fromIntent(data)
-            val ex = AuthorizationException.fromIntent(data)
-            viewModel.handleAuthResult(response, ex)
+    private val authLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data ?: return@registerForActivityResult
+                val response = AuthorizationResponse.fromIntent(data)
+                val ex = AuthorizationException.fromIntent(data)
+                viewModel.handleAuthResult(response, ex)
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +51,7 @@ class MainActivity : ComponentActivity() {
             EnterprisetodoappandroidTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val state by viewModel.authStateMessage.collectAsState()
-                    
+
                     // Listen for authentication requests
                     LaunchedEffect(Unit) {
                         viewModel.authRequest.collect { request ->
@@ -66,13 +65,13 @@ class MainActivity : ComponentActivity() {
                         onLoginClick = {
                             viewModel.startAuth()
                         },
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         authService.dispose()
@@ -80,7 +79,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(status: String, onLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+fun LoginScreen(
+    status: String,
+    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier.padding(16.dp)) {
         Button(onClick = onLoginClick) {
             Text("Login with Keycloak")

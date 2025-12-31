@@ -16,25 +16,25 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
-    fun provideConnectionBuilder(): ConnectionBuilder {
-        return ConnectionBuilder { uri ->
+    fun provideConnectionBuilder(): ConnectionBuilder =
+        ConnectionBuilder { uri ->
             val url = URL(uri.toString())
             url.openConnection() as HttpURLConnection
         }
-    }
 
     @Provides
     @Singleton
     fun provideAuthorizationService(
         @ApplicationContext context: Context,
-        connectionBuilder: ConnectionBuilder
+        connectionBuilder: ConnectionBuilder,
     ): AuthorizationService {
-        val appAuthConfiguration = AppAuthConfiguration.Builder()
-            .setConnectionBuilder(connectionBuilder)
-            .build()
+        val appAuthConfiguration =
+            AppAuthConfiguration
+                .Builder()
+                .setConnectionBuilder(connectionBuilder)
+                .build()
         return AuthorizationService(context, appAuthConfiguration)
     }
 }
