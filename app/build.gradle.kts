@@ -27,12 +27,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ISSUER_URI", "\"http://10.0.2.2:18080/realms/enterprise-todo-app\"")
+            buildConfigField("String", "CLIENT_ID", "\"enterprise-todo-app-mobile\"")
+            buildConfigField("String", "REDIRECT_URI", "\"com.example.todo:/oauth2redirect\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // TODO: Update these values for production environment
+            buildConfigField("String", "ISSUER_URI", "\"http://10.0.2.2:18080/realms/enterprise-todo-app\"")
+            buildConfigField("String", "CLIENT_ID", "\"enterprise-todo-app-mobile\"")
+            buildConfigField("String", "REDIRECT_URI", "\"com.example.todo:/oauth2redirect\"")
         }
     }
     compileOptions {
@@ -44,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

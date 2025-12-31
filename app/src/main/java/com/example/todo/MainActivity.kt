@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.todo.auth.AuthViewModel
 import com.example.todo.ui.theme.EnterprisetodoappandroidTheme
 import dagger.hilt.android.AndroidEntryPoint
 import net.openid.appauth.AuthorizationException
@@ -29,7 +30,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: AuthViewModel by viewModels()
 
     @Inject
     lateinit var authService: AuthorizationService

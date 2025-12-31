@@ -1,6 +1,9 @@
 package com.example.todo.di
 
 import android.content.Context
+import androidx.core.net.toUri
+import com.example.todo.BuildConfig
+import com.example.todo.auth.AuthConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,4 +40,13 @@ object AppModule {
                 .build()
         return AuthorizationService(context, appAuthConfiguration)
     }
+
+    @Provides
+    @Singleton
+    fun provideAuthConfig(): AuthConfig =
+        AuthConfig(
+            issuerUri = BuildConfig.ISSUER_URI.toUri(),
+            clientId = BuildConfig.CLIENT_ID,
+            redirectUri = BuildConfig.REDIRECT_URI.toUri(),
+        )
 }
