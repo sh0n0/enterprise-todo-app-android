@@ -1,7 +1,7 @@
 package com.example.todo
 
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -32,9 +32,9 @@ class MainViewModel
         val authRequest = _authRequest.receiveAsFlow()
 
         // Configuration
-        private val issuerUri = Uri.parse("http://10.0.2.2:18080/realms/enterprise-todo-app")
+        private val issuerUri = "http://10.0.2.2:18080/realms/enterprise-todo-app".toUri()
         private val clientId = "enterprise-todo-app-mobile"
-        private val redirectUri = Uri.parse("com.example.todo:/oauth2redirect")
+        private val redirectUri = "com.example.todo:/oauth2redirect".toUri()
 
         fun startAuth() {
             AuthorizationServiceConfiguration.fetchFromIssuer(
